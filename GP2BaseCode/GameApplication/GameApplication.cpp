@@ -2,26 +2,41 @@
 
 //should really check to see if we are on a windows platform
 #include "../Window/Win32Window.h"
+#include "../D3D10Renderer/D3D10Renderer.h"
 
 //boost header for program options
-#include <boost/program_options.hpp>
+//#include <boost/program_options.hpp>
 #include <fstream> 
 using namespace std;
-namespace po = boost::program_options;
+//namespace po = boost::program_options;
 
-
+//Constructor
 CGameApplication::CGameApplication(void)
 {
+	//Set to NULL
 	m_pWindow=NULL;
+	//Set to NULL
+	m_pRenderer=NULL;
+	//Set the Window name to GP2
 	m_GameOptionDesc.gameName=TEXT("GP2");
+	//Window Height and Width
 	m_GameOptionDesc.width=640;
 	m_GameOptionDesc.height=480;
+	//Full screen
 	m_GameOptionDesc.fullscreen=false;
+	//Config options
 	m_ConfigFileName=TEXT("game.cfg");
 }
 
+//Desconstructor
 CGameApplication::~CGameApplication(void)
 {
+	//Delete things in reverse order
+	if (m_pRenderer)
+	{
+		delete m_pRenderer;
+		m_pRenderer=NULL;
+	}
 	if (m_pWindow)
 	{
 		delete m_pWindow;
@@ -33,11 +48,6 @@ CGameApplication::~CGameApplication(void)
 //This initialises all subsystems
 bool CGameApplication::init()
 {
-	/*
-		 ("WindowWidth",po::value<int>(&config)->default_value(m_GameOptionDesc.width),"Width of the Game window")
-		 ("WindowHeight",po::value<int>(&config)->default_value(m_GameOptionDesc.height),"Width of the Game window")
-		 ("Fullscreen",po::value<float>(&config)->default_value(m_GameOptionDesc.fullscreen),"Fullscreen window");*/
-
 	if(!parseConfigFile())
 		return false;
 	if (!initWindow())
@@ -51,36 +61,38 @@ bool CGameApplication::init()
 	return true;
 }
 
+//called to parse the config file
 bool CGameApplication::parseConfigFile()
 {
-	//Parse command line options and also config file(need to build boost)
-	po::options_description config_file_options("Configuration");
-	config_file_options.add_options()
-		 ("GameName",po::wvalue<wstring>(),"Game Title")
-		 ("WindowWidth",po::value<int>(),"Window Width")
-		 ("WindowHeight",po::value<int>(),"Window Height")
-		 ("FullScreenWindow",po::value<bool>(),"Fullscreen");
-	 //read file
-	wifstream ifs(m_ConfigFileName.c_str());
-	po::variables_map vm;
-    if (!ifs)
-    {
-        
-        return false;
-    }
-    else
-    {
-        store(parse_config_file(ifs, config_file_options), vm);
-        notify(vm);
-		m_GameOptionDesc.gameName=vm["GameName"].as<wstring>();
-		m_GameOptionDesc.width=vm["WindowWidth"].as<int>();
-		m_GameOptionDesc.height=vm["WindowHeight"].as<int>();
-		m_GameOptionDesc.fullscreen=vm["FullScreenWindow"].as<bool>();
-    }
+
 	return true;
 }
 
-bool CGameApplication::initGame()
+//initInput - Initialises the input
+bool CGameApplication::initInput()
+{
+	return true;
+}
+
+//initPhysics - Initialises the physics system
+bool CGameApplication::initPhysics()
+{
+	return true;
+}
+
+//initGraphics - initialise the graphics subsystem
+bool CGameApplication::initGraphics()
+{
+	//check our settings first, to see what graphics mode we are in
+	m_pRenderer=new D3D10Renderer();
+	if (!m_pRenderer->init(m_pWindow->getHandleToWindow(),m_GameOptionDesc.fullscreen))
+		return false;
+
+	return true;
+}
+
+//initWindow - initialise the window
+bool CGameApplication::initWindow()
 {
 	//Create a Win32 Window
 	m_pWindow=new CWin32Window();
@@ -88,41 +100,40 @@ bool CGameApplication::initGame()
 	return true;
 }
 
+
+
+//called to init the game
+bool CGameApplication::initGame()
+{
+
+	return true;
+}
+
+//Called to put the game in a loop(aka game loop)
 void CGameApplication::run()
 {
+	//while the window is not closed
 	while(m_pWindow->running())
 	{
+		//check for all windows messages
 		m_pWindow->checkForWindowMessages();
+		//update
 		update();
+		//render
 		render();
 	}
 }
 
+//Render, called to draw one frame of the game
 void CGameApplication::render()
 {
- 
+	m_pRenderer->clear(1.0f,0.0f,0.0f,1.0f);
+
+	m_pRenderer->present();
 }
 
+//Update, called to update the game
 void CGameApplication::update()
 {
 }
 
-bool CGameApplication::initInput()
-{
-	return true;
-}
-
-bool CGameApplication::initPhysics()
-{
-	return true;
-}
-//initGraphics - initialise the graphics subsystem - BMD
-bool CGameApplication::initGraphics()
-{
-	return true;
-}
-
-bool CGameApplication::initWindow()
-{
-	return true;
-}
