@@ -12,8 +12,8 @@ struct ID3D10DepthStencilView;
 struct ID3D10Texture2D;
 struct ID3D10Effect;
 struct ID3D10Buffer;
-struct ID3D10Layout;
 struct ID3D10EffectTechnique;
+struct ID3D10Layout;
 
 
 //D3D10Renderer implements the Renderer interface
